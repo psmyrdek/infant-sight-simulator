@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Scientific baby vision simulator showing how infants see the world at 1-3 months old"
+    />
+    <meta name="theme-color" content="#1a1a2e" />
+    <title>Baby Vision Simulator - How Infants See the World</title>
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- PWA capabilities -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Baby Vision Simulator" />
+    <meta
+      property="og:description"
+      content="Experience how babies see the world at different developmental stages"
+    />
+    <meta property="og:type" content="website" />
+  </head>
+  <body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <h2>Baby Vision Simulator</h2>
+        <p>Initializing camera...</p>
+      </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app" class="app-container">
+      <!-- Camera View -->
+      <div class="camera-container">
+        <video id="cameraVideo" playsinline autoplay muted></video>
+        <canvas id="outputCanvas"></canvas>
+
+        <!-- Overlay UI -->
+        <div class="overlay-ui">
+          <!-- Top Bar -->
+          <header class="top-bar">
+            <h1 class="app-title">Baby Vision Simulator</h1>
+            <button class="info-button" aria-label="About this simulator">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+            </button>
+          </header>
+
+          <!-- Info Panel -->
+          <div id="infoPanel" class="info-panel"></div>
+
+          <!-- Age Selector -->
+          <div class="age-selector">
+            <div class="age-selector-header">Select Baby's Age</div>
+            <div class="age-options">
+              <label class="age-option">
+                <input type="radio" name="age" value="1" checked />
+                <span class="age-card">
+                  <span class="age-number">1</span>
+                  <span class="age-label">month</span>
+                  <span class="age-vision">20/800</span>
+                </span>
+              </label>
+              <label class="age-option">
+                <input type="radio" name="age" value="2" />
+                <span class="age-card">
+                  <span class="age-number">2</span>
+                  <span class="age-label">months</span>
+                  <span class="age-vision">20/150</span>
+                </span>
+              </label>
+              <label class="age-option">
+                <input type="radio" name="age" value="3" />
+                <span class="age-card">
+                  <span class="age-number">3</span>
+                  <span class="age-label">months</span>
+                  <span class="age-vision">20/60</span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Settings Panel -->
+          <div class="settings-panel">
+            <button class="settings-toggle" aria-label="Toggle settings">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="3"></circle>
+                <path
+                  d="M12 1v6m0 6v6m3.22-10.22l4.24-4.24M6.34 6.34L2.1 2.1m17.8 17.8l-4.24-4.24M6.34 17.66L2.1 21.9"
+                ></path>
+              </svg>
+            </button>
+            <div class="settings-content">
+              <h3>Display Settings</h3>
+              <label class="setting-item">
+                <input type="checkbox" id="mirrorToggle" checked />
+                <span class="setting-label">Mirror view</span>
+                <span class="setting-description"
+                  >Flip horizontally like a mirror</span
+                >
+              </label>
+              <label class="setting-item">
+                <input type="checkbox" id="peripheralBlurToggle" checked />
+                <span class="setting-label">Peripheral vision</span>
+                <span class="setting-description"
+                  >Simulate limited peripheral awareness</span
+                >
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- About Modal -->
+      <div id="aboutModal" class="modal">
+        <div class="modal-content">
+          <button class="modal-close">&times;</button>
+          <h2>About Baby Vision Simulator</h2>
+
+          <section class="modal-section">
+            <h3>Scientific Basis</h3>
+            <p>
+              This simulator is based on peer-reviewed research in infant vision
+              development, including studies on:
+            </p>
+            <ul>
+              <li>Contrast sensitivity function (CSF) development</li>
+              <li>Spatial frequency perception (cycles per degree)</li>
+              <li>Cone photoreceptor maturation (L, M, S cones)</li>
+              <li>Optical properties of infant eyes</li>
+              <li>Neural processing development</li>
+            </ul>
+          </section>
+
+          <section class="modal-section">
+            <h3>How It Works</h3>
+            <p>
+              The simulator processes your camera feed through multiple
+              scientific models:
+            </p>
+            <ol>
+              <li>
+                <strong>Spatial Filtering:</strong> Applies CSF-based frequency
+                limits
+              </li>
+              <li>
+                <strong>Color Processing:</strong> LMS color space with cone
+                sensitivities
+              </li>
+              <li>
+                <strong>Optical Effects:</strong> Light scatter and chromatic
+                aberration
+              </li>
+              <li>
+                <strong>Visual Field:</strong> Central vision with peripheral
+                suppression
+              </li>
+              <li>
+                <strong>Neural Effects:</strong> Photoreceptor noise and lateral
+                inhibition
+              </li>
+            </ol>
+          </section>
+
+          <section class="modal-section">
+            <h3>Key Findings</h3>
+            <div class="finding-cards">
+              <div class="finding-card">
+                <strong>1 Month:</strong> Babies see mostly high contrast,
+                prefer red colors, and focus best at 8-10 inches.
+              </div>
+              <div class="finding-card">
+                <strong>2 Months:</strong> Blue cones become functional,
+                contrast sensitivity improves 4-5x, tracking begins.
+              </div>
+              <div class="finding-card">
+                <strong>3 Months:</strong> Good color discrimination emerges,
+                smooth pursuit tracking, depth perception begins.
+              </div>
+            </div>
+          </section>
+
+          <section class="modal-section">
+            <h3>References</h3>
+            <ul class="references">
+              <li>
+                American Academy of Ophthalmology - Infant Vision Development
+              </li>
+              <li>
+                Banks & Salapatek (1978) - Acuity and contrast sensitivity in
+                infants
+              </li>
+              <li>Skelton et al. (2022) - Infant color perception</li>
+              <li>PMC Studies on visual development and CSF</li>
+            </ul>
+          </section>
+
+          <div class="modal-footer">
+            <p>
+              Created for educational purposes to help parents and caregivers
+              understand infant visual development.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Screen -->
+    <div id="errorScreen" class="error-screen" style="display: none">
+      <div class="error-content">
+        <svg
+          width="64"
+          height="64"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <h2>Camera Access Required</h2>
+        <p>
+          This simulator needs camera access to show how babies see the world.
+        </p>
+        <button class="retry-button" onclick="location.reload()">
+          Try Again
+        </button>
+        <div class="error-details">
+          <p>Make sure to:</p>
+          <ul>
+            <li>Allow camera permissions when prompted</li>
+            <li>Use a modern browser (Chrome, Firefox, Safari, Edge)</li>
+            <li>Access via HTTPS or localhost</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+      // UI Interactions
+      document.addEventListener("DOMContentLoaded", function () {
+        // Loading screen
+        setTimeout(() => {
+          document.getElementById("loadingScreen").style.opacity = "0";
+          setTimeout(() => {
+            document.getElementById("loadingScreen").style.display = "none";
+          }, 300);
+        }, 1500);
+
+        // Settings panel toggle
+        const settingsToggle = document.querySelector(".settings-toggle");
+        const settingsPanel = document.querySelector(".settings-panel");
+
+        settingsToggle.addEventListener("click", () => {
+          settingsPanel.classList.toggle("active");
+        });
+
+        // About modal
+        const infoButton = document.querySelector(".info-button");
+        const aboutModal = document.getElementById("aboutModal");
+        const modalClose = document.querySelector(".modal-close");
+
+        infoButton.addEventListener("click", () => {
+          aboutModal.classList.add("active");
+        });
+
+        modalClose.addEventListener("click", () => {
+          aboutModal.classList.remove("active");
+        });
+
+        aboutModal.addEventListener("click", (e) => {
+          if (e.target === aboutModal) {
+            aboutModal.classList.remove("active");
+          }
+        });
+
+        // Handle errors
+        window.addEventListener("error", (e) => {
+          if (e.message && e.message.includes("camera")) {
+            document.getElementById("app").style.display = "none";
+            document.getElementById("errorScreen").style.display = "flex";
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
