@@ -568,6 +568,18 @@ const TEMPORAL_STATE = {
   lastTs: 0,
 };
 
+// Export constants and functions for use in app.js
+export {
+  AGE_PRESETS,
+  applyInfantColorVision,
+  applyPeripheralVision,
+  applySpatialFrequencyFilter,
+  applyLMSColorProcessing,
+  applyOpticalEffects,
+  applyNeuralEffects,
+  applyTemporalIntegration
+};
+
 function applyTemporalIntegration(ctx, width, height, preset, nowMs) {
   const imageData = ctx.getImageData(0, 0, width, height);
   const curr = imageData.data;

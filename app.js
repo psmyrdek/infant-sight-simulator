@@ -4,6 +4,17 @@
  * Vision processing handled by vision.js module
  */
 
+import {
+  AGE_PRESETS,
+  applyInfantColorVision,
+  applyPeripheralVision,
+  applySpatialFrequencyFilter,
+  applyLMSColorProcessing,
+  applyOpticalEffects,
+  applyNeuralEffects,
+  applyTemporalIntegration
+} from './vision.js';
+
 /**
  * DOM elements
  */
