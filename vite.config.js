@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
+  base: 'https://psmyrdek.github.io/infant-sight-simulator/',
   server: {
     host: true, // Allow external connections
     port: 5173,
