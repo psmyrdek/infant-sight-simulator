@@ -66,7 +66,7 @@ const AGE_PRESETS = {
     peripheralSuppression: 0.7,
     // Neural factors
     lateralInhibition: 0.3,
-    photoreceptorNoise: 0.15,
+    photoreceptorNoise: 0.08,
     description:
       "Visual acuity 20/800-20/200 (2.4 cpd cutoff). Minimal blue cone function. High optical scatter. Focus locked at 8-10 inches.",
   },
@@ -88,7 +88,7 @@ const AGE_PRESETS = {
     centralFieldRadiusDeg: 15,
     peripheralSuppression: 0.5,
     lateralInhibition: 0.5,
-    photoreceptorNoise: 0.08,
+    photoreceptorNoise: 0.05,
     description:
       "Visual acuity 20/150 (2.8 cpd). S-cones functional. Contrast sensitivity 4-5x improved. Beginning accommodation.",
   },
@@ -110,7 +110,7 @@ const AGE_PRESETS = {
     centralFieldRadiusDeg: 20,
     peripheralSuppression: 0.3,
     lateralInhibition: 0.7,
-    photoreceptorNoise: 0.04,
+    photoreceptorNoise: 0.02,
     description:
       "Visual acuity 20/60 (4.0 cpd). Good color discrimination. Smooth pursuit tracking. Emerging stereopsis.",
   },
@@ -140,9 +140,18 @@ let frameCount = 0;
  * Initialize processing canvases
  */
 function setupCanvases(width, height) {
+  console.log("Setting up canvases with dimensions:", width, "x", height);
+  
+  if (width <= 0 || height <= 0) {
+    console.error("Invalid canvas dimensions:", width, height);
+    return;
+  }
+  
   outputCanvas.width = width;
   outputCanvas.height = height;
   outputCtx = outputCanvas.getContext("2d", {alpha: false});
+  
+  console.log("Output canvas setup complete. Context:", outputCtx);
 
   // Create multiple processing buffers
   const canvasNames = [
@@ -162,6 +171,8 @@ function setupCanvases(width, height) {
       ctx: canvas.getContext("2d", {alpha: false}),
     };
   });
+  
+  console.log("All processing canvases created");
 }
 
 /**
@@ -491,7 +502,7 @@ function applyNeuralEffects(ctx, width, height, preset) {
   // Photoreceptor noise (Poisson-like)
   if (preset.photoreceptorNoise > 0) {
     for (let i = 0; i < data.length; i += 4) {
-      const noise = (Math.random() - 0.5) * preset.photoreceptorNoise * 255;
+      const noise = (Math.random() - 0.5) * preset.photoreceptorNoise * 64; // Reduced from 255 to 64
       data[i] = Math.max(0, Math.min(255, data[i] + noise));
       data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
       data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
@@ -532,10 +543,75 @@ function applyNeuralEffects(ctx, width, height, preset) {
  * Main processing pipeline
  */
 function processFrame() {
+  if (!outputCtx) {
+    console.error("Output context not available");
+    return;
+  }
+  
   const width = outputCanvas.width;
   const height = outputCanvas.height;
-  const preset = AGE_PRESETS[selectedAge];
 
+  if (width <= 0 || height <= 0) {
+    console.error("Invalid canvas dimensions in processFrame:", width, height);
+    return;
+  }
+
+  if (!videoElement || videoElement.readyState < 2) {
+    console.log("Video not ready, skipping frame");
+    return;
+  }
+
+  // Step 1: Draw base video with mirroring
+  try {
+    outputCtx.save();
+    if (isMirrored) {
+      outputCtx.translate(width, 0);
+      outputCtx.scale(-1, 1);
+    }
+    outputCtx.drawImage(videoElement, 0, 0, width, height);
+    outputCtx.restore();
+  } catch (error) {
+    console.error("Error drawing video to canvas:", error);
+    return;
+  }
+
+  // Step 2: Apply age-based vision effects
+  const preset = AGE_PRESETS[selectedAge];
+  const blurAmount = Math.max(0, (4 - selectedAge) * 2); // 6px for 1mo, 4px for 2mo, 2px for 3mo
+  const saturation = preset.coneSensitivity.S * 100; // Blue cone development affects overall color
+  const contrast = Math.min(100, preset.contrastSensitivityPeak * 2); // Contrast sensitivity
+  
+  if (blurAmount > 0 || saturation < 100 || contrast < 100) {
+    outputCtx.save();
+    outputCtx.filter = `blur(${blurAmount}px) saturate(${saturation}%) contrast(${contrast}%)`;
+    outputCtx.drawImage(outputCtx.canvas, 0, 0);
+    outputCtx.restore();
+  }
+
+  // Step 3: Apply peripheral vision limitation (vignette)
+  if (enablePeripheralBlend) {
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const visionRadius = Math.min(width, height) * (preset.centralFieldRadiusDeg / 40);
+    
+    outputCtx.save();
+    outputCtx.globalCompositeOperation = "multiply";
+    
+    const gradient = outputCtx.createRadialGradient(
+      centerX, centerY, visionRadius * 0.3,
+      centerX, centerY, visionRadius
+    );
+    gradient.addColorStop(0, "rgba(255,255,255,1)");
+    gradient.addColorStop(0.7, `rgba(255,255,255,${1 - preset.peripheralSuppression * 0.5})`);
+    gradient.addColorStop(1, `rgba(255,255,255,${1 - preset.peripheralSuppression})`);
+    
+    outputCtx.fillStyle = gradient;
+    outputCtx.fillRect(0, 0, width, height);
+    outputCtx.restore();
+  }
+
+  // TODO: Re-enable filters step by step
+  /*
   // Step 1: Capture input
   const inputCtx = processingCanvases.input.ctx;
   inputCtx.save();
@@ -593,13 +669,15 @@ function processFrame() {
 
   // Output to display
   outputCtx.drawImage(processingCanvases.final.canvas, 0, 0);
+  */
 
   // Add frame rate indicator for temporal effects
   frameCount++;
+  if (frameCount === 1) {
+    console.log("First frame processed successfully!");
+  }
   if (frameCount % 60 === 0) {
-    console.log(
-      `Processing at ${preset.temporalIntegrationMs}ms integration time`
-    );
+    console.log(`Raw camera feed - ${frameCount} frames processed`);
   }
 }
 
@@ -641,6 +719,7 @@ function updateInfoPanel() {
  */
 async function startCamera() {
   try {
+    console.log("Requesting camera access...");
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: "user",
@@ -650,17 +729,41 @@ async function startCamera() {
       },
       audio: false,
     });
+    
+    console.log("Camera stream obtained:", stream);
     videoElement.srcObject = stream;
 
     await new Promise((resolve) => {
-      if (videoElement.readyState >= 2) resolve();
-      else videoElement.onloadedmetadata = resolve;
+      if (videoElement.readyState >= 2) {
+        console.log("Video ready immediately");
+        resolve();
+      } else {
+        console.log("Waiting for video metadata...");
+        videoElement.onloadedmetadata = () => {
+          console.log("Video metadata loaded");
+          resolve();
+        };
+      }
     });
 
-    setupCanvases(videoElement.videoWidth, videoElement.videoHeight);
+    console.log("Video dimensions:", videoElement.videoWidth, "x", videoElement.videoHeight);
+    
+    // CRITICAL: Start playing the video
+    await videoElement.play();
+    console.log("Video playing started");
+    
+    // Use container dimensions, not video dimensions
+    const container = outputCanvas.parentElement;
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+    console.log("Container dimensions:", containerWidth, "x", containerHeight);
+    
+    setupCanvases(containerWidth, containerHeight);
     updateInfoPanel();
     renderLoop();
+    console.log("Camera initialization complete");
   } catch (error) {
+    console.error("Camera error:", error);
     handleCameraError(error);
   }
 }

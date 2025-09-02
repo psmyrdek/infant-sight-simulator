@@ -1,0 +1,27 @@
+{
+  "name": "sim-view",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:pages": "vite build && echo 'Build complete! Deploy /docs folder to GitHub Pages'",
+    "preview": "vite preview",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/psmyrdek/infant-sight-simulator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/psmyrdek/infant-sight-simulator/issues"
+  },
+  "homepage": "https://github.com/psmyrdek/infant-sight-simulator#readme",
+  "description": "Scientific Baby Vision Simulator - Experience how infants see the world at different developmental stages",
+  "devDependencies": {
+    "vite": "^7.1.4"
+  }
+}
