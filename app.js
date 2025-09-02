@@ -12,8 +12,8 @@ import {
   applyLMSColorProcessing,
   applyOpticalEffects,
   applyNeuralEffects,
-  applyTemporalIntegration
-} from './vision.js';
+  applyTemporalIntegration,
+} from "./vision.js";
 
 /**
  * DOM elements
@@ -101,14 +101,45 @@ function processFrame() {
     return;
   }
 
-  // Step 1: Draw base video with mirroring
+  // Step 1: Draw base video with mirroring and aspect-ratio preserving crop (object-fit: cover)
   try {
     outputCtx.save();
     if (isMirrored) {
       outputCtx.translate(width, 0);
       outputCtx.scale(-1, 1);
     }
-    outputCtx.drawImage(videoElement, 0, 0, width, height);
+
+    const vW = videoElement.videoWidth || width;
+    const vH = videoElement.videoHeight || height;
+    const videoAR = vW / vH;
+    const canvasAR = width / height;
+
+    let sx = 0;
+    let sy = 0;
+    let sWidth = vW;
+    let sHeight = vH;
+
+    if (canvasAR > videoAR) {
+      // Canvas is wider than video: crop vertically
+      sHeight = Math.round(vW / canvasAR);
+      sy = Math.max(0, Math.floor((vH - sHeight) / 2));
+    } else {
+      // Canvas is taller than video: crop horizontally
+      sWidth = Math.round(vH * canvasAR);
+      sx = Math.max(0, Math.floor((vW - sWidth) / 2));
+    }
+
+    outputCtx.drawImage(
+      videoElement,
+      sx,
+      sy,
+      sWidth,
+      sHeight,
+      0,
+      0,
+      width,
+      height
+    );
     outputCtx.restore();
   } catch (error) {
     console.error("Error drawing video to canvas:", error);
@@ -347,8 +378,10 @@ function resizeCanvasToContainer() {
   const wrap = outputCanvas.parentElement;
   if (!wrap) return;
   const rect = wrap.getBoundingClientRect();
-  outputCanvas.style.width = rect.width + "px";
-  outputCanvas.style.height = rect.height + "px";
+  setupCanvases(
+    Math.max(1, Math.floor(rect.width)),
+    Math.max(1, Math.floor(rect.height))
+  );
 }
 
 /**
