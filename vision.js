@@ -17,7 +17,11 @@ function radToDeg(rad) {
 }
 
 // Estimate pixels-per-degree using assumed camera FOV and canvas size
-function estimatePixelsPerDegree(width, height, hfovDeg = DEFAULT_CAMERA_HFOV_DEG) {
+function estimatePixelsPerDegree(
+  width,
+  height,
+  hfovDeg = DEFAULT_CAMERA_HFOV_DEG
+) {
   const aspect = width > 0 && height > 0 ? width / height : 16 / 9;
   const hfovRad = degToRad(hfovDeg);
   const vfovRad = 2 * Math.atan(Math.tan(hfovRad / 2) / aspect);
@@ -185,17 +189,17 @@ function applyInfantColorVision(ctx, width, height, preset, selectedAge) {
       data[i] = Math.round(linearToSrgb(outR) * 255);
       data[i + 1] = Math.round(linearToSrgb(outG) * 255);
       data[i + 2] = Math.round(linearToSrgb(outB) * 255);
-      
     } else if (selectedAge === 2) {
       // 2 months: Red/green developing, blue still very limited
       const outR = clamp01(rL * preset.coneSensitivity.L);
       const outG = clamp01(gL * preset.coneSensitivity.M);
-      const outB = clamp01(Math.min(bL * preset.coneSensitivity.S, luminance * 0.3));
+      const outB = clamp01(
+        Math.min(bL * preset.coneSensitivity.S, luminance * 0.3)
+      );
 
       data[i] = Math.round(linearToSrgb(outR) * 255);
       data[i + 1] = Math.round(linearToSrgb(outG) * 255);
       data[i + 2] = Math.round(linearToSrgb(outB) * 255);
-      
     } else {
       // 3 months: More adult-like but still limited
       const outR = clamp01(rL * preset.coneSensitivity.L);
@@ -225,8 +229,12 @@ function applyPeripheralVision(ctx, width, height, preset) {
   ctx.globalCompositeOperation = "multiply";
 
   const gradient = ctx.createRadialGradient(
-    centerX, centerY, Math.max(1, centralRadiusPx * 0.5),
-    centerX, centerY, Math.max(centralRadiusPx, maxRadiusPx)
+    centerX,
+    centerY,
+    Math.max(1, centralRadiusPx * 0.5),
+    centerX,
+    centerY,
+    Math.max(centralRadiusPx, maxRadiusPx)
   );
   gradient.addColorStop(0, "rgba(255,255,255,1)");
   gradient.addColorStop(
@@ -565,7 +573,9 @@ function applyTemporalIntegration(ctx, width, height, preset, nowMs) {
   const curr = imageData.data;
   const tauMs = Math.max(10, preset.temporalIntegrationMs);
   const now = typeof nowMs === "number" ? nowMs : performance.now();
-  const dt = TEMPORAL_STATE.lastTs ? Math.max(1, now - TEMPORAL_STATE.lastTs) : 16;
+  const dt = TEMPORAL_STATE.lastTs
+    ? Math.max(1, now - TEMPORAL_STATE.lastTs)
+    : 16;
   const alpha = Math.min(1, dt / tauMs);
 
   if (
